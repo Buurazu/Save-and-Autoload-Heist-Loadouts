@@ -1,6 +1,6 @@
 {
 	"name" : "Save and Autoload Heist Loadouts",
-	"description" : "Enables saving your selected profile and loadout as a Default for each heist",
+	"description" : "Allows saving your selected profile and loadout as an autoloaded default for each heist",
 	"author" : "Buurazu",
 	"version" : "1.0",
 	"contact" : "Discord: Buurazu#8042"
@@ -10,7 +10,7 @@
 	"updates": [{
 		"identifier": "autoloadheist",
 		"host": {
-			"meta": "https://raw.githubusercontent.com/Buurazu/Standalone-ECM-Timer-2021/main/meta.json"
+			"meta": "https://raw.githubusercontent.com/Buurazu/Save-and-Autoload-Heist-Loadouts/main/meta.json"
 		}
 	}],
 	"hooks" : [
