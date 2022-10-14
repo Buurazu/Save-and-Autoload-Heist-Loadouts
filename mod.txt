@@ -1,0 +1,26 @@
+{
+	"name" : "Save and Autoload Heist Loadouts",
+	"description" : "Enables saving your selected profile and loadout as a Default for each heist",
+	"author" : "Buurazu",
+	"version" : "1.0",
+	"contact" : "Discord: Buurazu#8042"
+	"blt_version" : 2,
+	"image" : "buurazu.png",
+	"color" : "0.8 0 0",
+	"updates": [{
+		"identifier": "autoloadheist",
+		"host": {
+			"meta": "https://raw.githubusercontent.com/Buurazu/Standalone-ECM-Timer-2021/main/meta.json"
+		}
+	}],
+	"hooks" : [
+		{
+			"hook_id" : "lib/managers/menu/multiprofileitemgui",
+			"script_path" : "multiprofileitemgui.lua"
+		},
+		{
+			"hook_id" : "lib/managers/menu/missionbriefinggui",
+			"script_path" : "multiprofileitemgui.lua"
+		}
+	]
+}
