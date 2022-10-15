@@ -27,18 +27,66 @@ DB:create_entry(
 	ModPath .. 'menu_save2.texture'
 )
 
-local function getDayName()	
+-- We can't just grab the job name and append "2" or "3" to it because that breaks in Crime Spree
+-- So this table converts the Day Names into Job Name + Day Number
+-- It also handles merging Bank Heists and Transports, and Election Day Plan C
+local predefined = {
+	["Bank Heist: Deposit"] = "Bank Heist",
+	["Bank Heist: Cash"] = "Bank Heist",
+	["Bank Heist: Gold"] = "Bank Heist",
+	["Bank Heist: Random"] = "Bank Heist",
+	["Transport: Crossroads"] = "Transports",
+	["Transport: Downtown"] = "Transports",
+	["Transport: Harbor"] = "Transports",
+	["Transport: Park"] = "Transports",
+	["Transport: Underpass"] = "Transports",
+	["Garnet Group Boutique"] = "Reservoir Dogs 2",
+	["Safe house Nightmare"] = "Safe House Nightmare",
+	
+	["Code for Meth"] = "Rats 2",
+	["Bus Stop"] = "Rats 3",
+	["FBI Server"] = "Firestarter 2",
+	["Trustee Bank"] = "Bank Heist", --Firestarter 3
+	["Boat Load"] = "Watchdogs 2",
+	
+	["Four Floors"] = "Hotline Miami 2",
+	["The Search"] = "Hoxton Breakout 2",
+	
+	["Train Trade"] = "Framing Frame 2",
+	["Framing"] = "Framing Frame 3",
+	["Swing Vote"] = "Election Day 2",
+	["Breaking Ballot"] = "Election Day Plan C",
+	["Engine Problem"] = "Big Oil 2",
+	["Interception"] = "The Biker Heist 2",
+	["Dirty work"] = "Goat Simulator 2",
+}
+
+local function getDayName()
+	local job_name = managers.localization:text(tweak_data.narrative.jobs[managers.job:current_real_job_id()].name_id)
+	local job_day = managers.job:current_stage()
+	if (job_day > 1) then job_name = job_name .. " " .. job_day end
+	
+	--this should work well for all Day 1 Crime Spree missions
+	if (managers.crime_spree:is_active()) then
+		job_name = managers.localization:text(managers.crime_spree:get_narrative_tweak_data_for_mission_level(managers.crime_spree:current_mission()).name_id)
+	end
+	
 	local stage_data = managers.job:current_stage_data()
 	local level_data = managers.job:current_level_data()
 	local name_id = stage_data.name_id or level_data.name_id
 	local day_name = managers.localization:text(name_id)
-	if (managers.skirmish:is_skirmish()) then day_name = "Holdout" end
-	return day_name
+	
+	if (predefined[day_name]) then job_name = predefined[day_name] end -- Day Name -> Job Name #
+	if (predefined[job_name]) then job_name = predefined[job_name] end -- consolidate Bank Heists into one thing
+	if (managers.skirmish:is_skirmish()) then job_name = "Holdout" end
+	return job_name
 end
 
 local function loadLoadout()
 	local blm = managers.blackmarket
 	local loadout = AutoloadHeistLoadouts.loadouts[getDayName()]
+	
+	local loadedString = ""
 	
 	if loadout then
 		managers.multi_profile:set_current_profile(loadout.profileID)
@@ -50,7 +98,13 @@ local function loadLoadout()
 		blm:equip_deployable({target_slot = 2, name = loadout.deployable2})
 		blm:equip_armor(loadout.armorID)
 		managers.multi_profile:save_current()
-		return true
+		
+		loadedString = loadedString .. managers.multi_profile:current_profile_name() .. " Profile"
+		-- don't use the loadout's saved IDs here, in case the equip failed
+		-- this way, if our weapons are different due to level requirement or such, the player knows
+		loadedString = loadedString .. ", " .. (blm:get_crafted_custom_name("primaries", blm:equipped_weapon_slot("primaries")) or blm:get_weapon_name_by_category_slot("primaries", blm:equipped_weapon_slot("primaries")) or "Unknown Primary")
+		loadedString = loadedString .. ", " .. (blm:get_crafted_custom_name("secondaries", blm:equipped_weapon_slot("secondaries")) or blm:get_weapon_name_by_category_slot("secondaries", blm:equipped_weapon_slot("secondaries")) or "Unknown Secondary")
+		return loadedString
 	end
 	return false
 end
@@ -165,10 +219,11 @@ elseif RequiredScript == "lib/managers/menu/missionbriefinggui" then
 	
 	Hooks:PreHook(MissionBriefingGui,"init","MissionBriefingInit_AutoloadHeist",function(self, ...)
 		if firstTime then
-			firstTime = fals
-			if loadLoadout() then
+			firstTime = false
+			loadoutString = loadLoadout()
+			if loadoutString then
 				DelayedCalls:Add( "SAHLMessage", 1, function()
-					managers.chat:_receive_message(1,"Heist Loadouts","Loadout for " .. getDayName() .. " loaded",Color("CC4040"))
+					managers.chat:_receive_message(1,"Heist Loadouts","Loadout for " .. getDayName() .. " loaded: " .. loadoutString,Color("CC4040"))
 				end )
 			end
 		end
