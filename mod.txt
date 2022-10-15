@@ -2,7 +2,7 @@
 	"name" : "Save and Autoload Heist Loadouts",
 	"description" : "Allows saving your selected profile and loadout as an autoloaded default for each heist",
 	"author" : "Buurazu",
-	"version" : "1.0",
+	"version" : "1.0.1",
 	"contact" : "Discord: Buurazu#8042"
 	"blt_version" : 2,
 	"image" : "buurazu.png",
@@ -15,12 +15,8 @@
 	}],
 	"hooks" : [
 		{
-			"hook_id" : "lib/managers/menu/multiprofileitemgui",
-			"script_path" : "multiprofileitemgui.lua"
-		},
-		{
 			"hook_id" : "lib/managers/menu/missionbriefinggui",
-			"script_path" : "multiprofileitemgui.lua"
+			"script_path" : "saveautoloadmain.lua"
 		}
 	]
 }
