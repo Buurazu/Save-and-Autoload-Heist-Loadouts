@@ -31,6 +31,13 @@ DB:create_entry(
 -- So this table converts the Day Names into Job Name + Day Number
 -- It also handles merging Bank Heists and Transports, and Election Day Plan C
 local predefined = {
+	-- have the escapes here so they can override Day 1's name
+	["Overpass Escape"] = "Overpass Escape",
+	["Park Escape"] = "Park Escape",
+	["Street Escape"] = "Street Escape",
+	["Cafe Escape"] = "Cafe Escape",
+	["Garage Escape"] = "Garage Escape",
+	
 	["Bank Heist: Deposit"] = "Bank Heist",
 	["Bank Heist: Cash"] = "Bank Heist",
 	["Bank Heist: Gold"] = "Bank Heist",
@@ -40,24 +47,36 @@ local predefined = {
 	["Transport: Harbor"] = "Transports",
 	["Transport: Park"] = "Transports",
 	["Transport: Underpass"] = "Transports",
-	["Garnet Group Boutique"] = "Reservoir Dogs Heist 2",
+	
+	-- silly capitalization inconsistency in the base game
 	["Safe house Nightmare"] = "Safe House Nightmare",
 	
+	--some day 1's don't behave well in Crime Spree, some do. So put some Day 1 name conversions here too even if they're mostly unneeded
+	["Highland Mortuary"] = "Reservoir Dogs Heist",
+	["Garnet Group Boutique"] = "Reservoir Dogs Heist 2",
+	-- Cook Off can't be used here
 	["Code for Meth"] = "Rats 2",
 	["Bus Stop"] = "Rats 3",
+	["Airport"] = "Firestarter",
 	["FBI Server"] = "Firestarter 2",
 	["Trustee Bank"] = "Bank Heist", --Firestarter 3
+	["Truck Load"] = "Watchdogs",
 	["Boat Load"] = "Watchdogs 2",
-	
+	-- Hotline Miami 1 = Hotline Miami
 	["Four Floors"] = "Hotline Miami 2",
+	["The Breakout"] = "Hoxton Breakout",
 	["The Search"] = "Hoxton Breakout 2",
-	
+	-- Art Gallery can't be used here
 	["Train Trade"] = "Framing Frame 2",
 	["Framing"] = "Framing Frame 3",
+	["Right Track"] = "Election Day",
 	["Swing Vote"] = "Election Day 2",
 	["Breaking Ballot"] = "Election Day Plan C",
+	["Club House"] = "Big Oil",
 	["Engine Problem"] = "Big Oil 2",
+	["Lion's Den"] = "The Biker Heist",
 	["Interception"] = "The Biker Heist 2",
+	["This was not the deal"] = "Goat Simulator",
 	["Dirty work"] = "Goat Simulator 2",
 }
 
@@ -65,8 +84,7 @@ local function getDayName()
 	local job_name = managers.localization:text(tweak_data.narrative.jobs[managers.job:current_real_job_id()].name_id)
 	local job_day = managers.job:current_stage()
 	if (job_day > 1) then job_name = job_name .. " " .. job_day end
-	
-	--this should work well for all Day 1 Crime Spree missions
+
 	if (managers.crime_spree:is_active()) then
 		job_name = managers.localization:text(managers.crime_spree:get_narrative_tweak_data_for_mission_level(managers.crime_spree:current_mission()).name_id)
 	end
@@ -76,6 +94,7 @@ local function getDayName()
 	local name_id = stage_data.name_id or level_data.name_id
 	local day_name = managers.localization:text(name_id)
 	
+	if (string.find(job_name, "ERROR")) then job_name = day_name end   -- in case of error heist names, especially in Crime Spree
 	if (predefined[day_name]) then job_name = predefined[day_name] end -- Day Name -> Job Name #
 	if (predefined[job_name]) then job_name = predefined[job_name] end -- consolidate Bank Heists into one thing
 	if (managers.skirmish:is_skirmish()) then job_name = "Holdout" end
@@ -131,16 +150,23 @@ if RequiredScript == "lib/managers/menu/missionbriefinggui" then
 	local firstTime = true -- init is called each time you switch profiles
 	
 	Hooks:PreHook(MissionBriefingGui,"init","MissionBriefingInit_AutoloadHeist",function(self, ...)
-		if firstTime then
+		local dayName = getDayName()
+		if firstTime and dayName ~= Global.SAHLLastDayName then
 			firstTime = false
 			loadoutString = loadLoadout()
 			if loadoutString then
 				-- delay it because chat isn't ready yet
 				DelayedCalls:Add( "SAHLMessage", 1, function()
-					managers.chat:_receive_message(1,"Heist Loadouts","Loadout for " .. getDayName() .. " loaded: " .. loadoutString,Color("CC4040"))
+					managers.chat:_receive_message(1,"Heist Loadouts","Loadout for " .. dayName .. " loaded: " .. loadoutString,Color("CC4040"))
+				end )
+			else
+				DelayedCalls:Add( "SAHLMessage", 1, function()
+					managers.chat:_receive_message(1,"Heist Loadouts","No loadout found for " .. dayName,Color("CC4040"))
 				end )
 			end
 		end
+		firstTime = false
+		Global.SAHLLastDayName = dayName
 	end)
 	Hooks:PostHook(MissionBriefingGui,"init","MissionBriefingPostInit_AutoloadHeist",function(self, ...)
 		self._save_preset_mod = self._panel:bitmap({
