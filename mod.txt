@@ -2,7 +2,7 @@
 	"name" : "Save and Autoload Heist Loadouts",
 	"description" : "Allows saving your selected profile and loadout as an autoloaded default for each heist",
 	"author" : "Buurazu",
-	"version" : "1.0.2",
+	"version" : "1.0.3",
 	"contact" : "Discord: Buurazu#8042"
 	"blt_version" : 2,
 	"image" : "buurazu.png",
